@@ -1,23 +1,35 @@
-options:
-  defaultLogsBucketBehavior: 'REGIONAL_USER_OWNED_BUCKET'
-
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/:$COMMIT_SHA', '.']
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t',
+      'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/$COMMIT_SHA',
+      '.'
+    ]
 
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/:$COMMIT_SHA']
+  # Step 2: Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/$COMMIT_SHA'
+    ]
 
-# New step: deploy to Cloud Run using Google Cloud SDK container
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    gcloud run deploy SERVICE_NAME \
-      --image=us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/:$COMMIT_SHA \
-      --region=us-central1 --platform=managed \
-      --allow-unauthenticated --port=PORT
+  # Step 3: Deploy to Cloud Run using Cloud SDK
+  - name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli'
+    entrypoint: 'gcloud'
+    args: [
+      'run',
+      'deploy',
+      'harwinder-100961171',
+      '--image',
+      'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/$COMMIT_SHA',
+      '--region',
+      'us-central1',
+      '--platform',
+      'managed',
+      '--allow-unauthenticated'
+    ]
 
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/harwinder-100961171/$COMMIT_SHA'
